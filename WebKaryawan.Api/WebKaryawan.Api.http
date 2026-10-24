@@ -1,0 +1,63 @@
+@WebKaryawan.Api_HostAddress = http://localhost:5080
+@NamaPenggunaAdmin = admin
+@KataSandiAdmin = ISI_SENDIRI_SAAT_MENCOBA
+
+### Login sebagai admin (simpan cookie dari respons)
+POST {{WebKaryawan.Api_HostAddress}}/api/auth/login
+Content-Type: application/json
+
+{
+  "username": "{{NamaPenggunaAdmin}}",
+  "password": "{{KataSandiAdmin}}"
+}
+
+### Daftar karyawan halaman 1
+GET {{WebKaryawan.Api_HostAddress}}/api/karyawan?halaman=1&ukuranHalaman=10
+Accept: application/json
+
+### Cari karyawan (NIK & Nama digabung AND)
+GET {{WebKaryawan.Api_HostAddress}}/api/karyawan?nik=3171&nama=Messi
+Accept: application/json
+
+### Detail satu karyawan
+GET {{WebKaryawan.Api_HostAddress}}/api/karyawan/3171010101870001
+Accept: application/json
+
+### Daftar negara
+GET {{WebKaryawan.Api_HostAddress}}/api/negara
+Accept: application/json
+
+### Tambah karyawan
+POST {{WebKaryawan.Api_HostAddress}}/api/karyawan
+Content-Type: application/json
+
+{
+  "nik": "3171010101990009",
+  "namaLengkap": "Budi Santoso",
+  "jenisKelamin": "Laki-laki",
+  "tanggalLahir": "1999-03-17",
+  "alamat": "Jl. Kenanga No 7 Bandung",
+  "negaraId": "ID"
+}
+
+### Ubah karyawan (NIK tidak dikirim, read-only)
+PUT {{WebKaryawan.Api_HostAddress}}/api/karyawan/3171010101990009
+Content-Type: application/json
+
+{
+  "namaLengkap": "Budi Santoso Wijaya",
+  "jenisKelamin": "Laki-laki",
+  "tanggalLahir": "1999-03-17",
+  "alamat": "Jl. Kenanga No 9 Bandung",
+  "negaraId": "MY"
+}
+
+### Hapus karyawan
+DELETE {{WebKaryawan.Api_HostAddress}}/api/karyawan/3171010101990009
+
+### Sesi pengguna yang sedang masuk
+GET {{WebKaryawan.Api_HostAddress}}/api/auth/sesi
+Accept: application/json
+
+### Keluar
+POST {{WebKaryawan.Api_HostAddress}}/api/auth/keluar

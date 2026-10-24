@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Ubah Data - Aplikasi Data Pribadi</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="/css/aplikasi.css" />
+</head>
+<body>
+    <div class="container py-4">
+
+        <div class="kepala-aplikasi d-flex align-items-center gap-2 mb-3">
+            <span class="ikon-daftar">&#9776;</span>
+            <h1 class="judul-aplikasi mb-0">Aplikasi Data Pribadi</h1>
+        </div>
+
+        <div class="kartu-form">
+            <h2 class="judul-form">Ubah Data Pribadi</h2>
+
+            <div class="alert alert-danger py-2 ringkasan-galat" id="ringkasanGalat"></div>
+
+            <form id="formKaryawan" novalidate>
+                <div class="mb-3">
+                    <label for="inputNik" class="form-label">NIK</label>
+                    <input type="text" class="form-control" id="inputNik" readonly aria-readonly="true" />
+                    <div class="teks-info mt-1">NIK tidak dapat diubah.</div>
+                    <div class="pesan-galat" data-untuk="nik"></div>
+                </div>
+
+                <div class="mb-3">
+                    <label for="inputNamaLengkap" class="form-label">Nama Lengkap</label>
+                    <input type="text" class="form-control" id="inputNamaLengkap" autocomplete="off" />
+                    <div class="pesan-galat" data-untuk="namaLengkap"></div>
+                </div>
+
+                <div class="mb-3">
+                    <span class="form-label d-block">Jenis Kelamin</span>
+                    <div class="form-check form-check-inline">
+                        <input class="form-check-input" type="radio" name="jenisKelamin" id="radioLakiLaki" value="Laki-laki" />
+                        <label class="form-check-label" for="radioLakiLaki">Laki-laki</label>
+                    </div>
+                    <div class="form-check form-check-inline">
+                        <input class="form-check-input" type="radio" name="jenisKelamin" id="radioPerempuan" value="Perempuan" />
+                        <label class="form-check-label" for="radioPerempuan">Perempuan</label>
+                    </div>
+                    <div class="pesan-galat" data-untuk="jenisKelamin"></div>
+                </div>
+
+                <div class="mb-3">
+                    <label for="inputTanggalLahir" class="form-label">Tanggal Lahir</label>
+                    <input type="date" class="form-control" id="inputTanggalLahir" />
+                    <div class="pesan-galat" data-untuk="tanggalLahir"></div>
+                </div>
+
+                <div class="mb-3">
+                    <label for="inputAlamat" class="form-label">Alamat</label>
+                    <textarea class="form-control" id="inputAlamat" rows="3"></textarea>
+                    <div class="pesan-galat" data-untuk="alamat"></div>
+                </div>
+
+                <div class="mb-4">
+                    <label for="pilihNegara" class="form-label">Negara</label>
+                    <select class="form-select" id="pilihNegara">
+                        <option value="">Pilih Negara</option>
+                    </select>
+                    <div class="pesan-galat" data-untuk="negaraId"></div>
+                </div>
+
+                <div class="d-flex gap-2">
+                    <button type="submit" class="btn tombol-utama">Ubah</button>
+                    <a href="/index.html" class="btn tombol-kedua">Kembali</a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/jquery@3.7.1/dist/jquery.min.js"></script>
+    <script src="/js/form-karyawan.js"></script>
+</body>
+</html>

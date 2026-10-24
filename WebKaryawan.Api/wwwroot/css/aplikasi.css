@@ -1,0 +1,212 @@
+:root {
+    --biru-tua: #1f3864;
+    --biru-tombol: #2f5b9c;
+    --peach-panel: #fbe5d6;
+    --merah-aksi: #c00000;
+    --garis-tabel: #d9d9d9;
+    --oranye: #d84f00;
+}
+
+body {
+    background-color: #ffffff;
+    font-family: "Segoe UI", Tahoma, Arial, sans-serif;
+    font-size: 14px;
+    color: #1a1a1a;
+}
+
+.judul-aplikasi {
+    font-size: 18px;
+    font-weight: 700;
+    letter-spacing: 0.2px;
+}
+
+.ikon-daftar {
+    font-size: 18px;
+    color: #404040;
+}
+
+.teks-sesi {
+    font-size: 12px;
+    color: #595959;
+}
+
+.panel-cari {
+    background-color: var(--peach-panel);
+    border: 1px solid #f0c9ad;
+    border-radius: 4px;
+}
+
+.label-cari {
+    font-size: 12px;
+    font-weight: 700;
+    margin-bottom: 2px;
+}
+
+.tombol-utama {
+    background-color: var(--biru-tombol);
+    border: 1px solid var(--biru-tombol);
+    color: #ffffff;
+    border-radius: 4px;
+    padding: 4px 18px;
+    font-size: 13px;
+}
+
+.tombol-utama:hover,
+.tombol-utama:focus {
+    background-color: #24487d;
+    border-color: #24487d;
+    color: #ffffff;
+}
+
+.tombol-kedua {
+    background-color: #8c8c8c;
+    border: 1px solid #8c8c8c;
+    color: #ffffff;
+    border-radius: 4px;
+    padding: 4px 18px;
+    font-size: 13px;
+}
+
+.tombol-kedua:hover,
+.tombol-kedua:focus {
+    background-color: #737373;
+    border-color: #737373;
+    color: #ffffff;
+}
+
+.tabel-pembungkus {
+    border: 1px solid var(--garis-tabel);
+    overflow-x: auto;
+}
+
+.tabel-data {
+    font-size: 13px;
+}
+
+.tabel-data thead th {
+    background-color: var(--biru-tua);
+    color: #ffffff;
+    font-weight: 600;
+    white-space: nowrap;
+    border-bottom: 1px solid var(--biru-tua);
+    vertical-align: middle;
+}
+
+.tabel-data tbody td {
+    border-color: var(--garis-tabel);
+    vertical-align: top;
+}
+
+.tabel-data tbody tr:hover {
+    background-color: #f5f8fc;
+}
+
+.aksi-detail,
+.aksi-edit,
+.aksi-hapus {
+    text-decoration: underline;
+    font-size: 13px;
+    margin-right: 10px;
+    cursor: pointer;
+    background: none;
+    border: none;
+    padding: 0;
+}
+
+.aksi-detail {
+    color: var(--oranye);
+}
+
+.aksi-edit {
+    color: var(--biru-tombol);
+}
+
+.aksi-hapus {
+    color: var(--merah-aksi);
+}
+
+.aksi-hapus:hover {
+    color: #8f0000;
+}
+
+.aksi-detail:hover {
+    color: #bb4500;
+}
+
+.aksi-edit:hover {
+    color: #24487d;
+}
+
+.teks-info {
+    font-size: 12px;
+    color: #595959;
+}
+
+.baris-kosong td {
+    text-align: center;
+    color: #8c8c8c;
+    padding: 24px 0;
+}
+
+.pesan-galat {
+    color: #b00020;
+    font-size: 12px;
+    margin-top: 2px;
+    min-height: 16px;
+}
+
+.ringkasan-galat {
+    display: none;
+}
+
+.ringkasan-galat.tampil {
+    display: block;
+}
+
+.form-label {
+    font-size: 13px;
+    font-weight: 600;
+    margin-bottom: 2px;
+}
+
+.kartu-form {
+    max-width: 560px;
+    border: 1px solid var(--garis-tabel);
+    border-radius: 4px;
+    background-color: #ffffff;
+    padding: 20px 24px;
+}
+
+.judul-form {
+    font-size: 15px;
+    font-weight: 700;
+    margin-bottom: 16px;
+}
+
+.baris-detail dt {
+    font-weight: 600;
+    font-size: 13px;
+    color: #404040;
+}
+
+.baris-detail dd {
+    font-size: 13px;
+    margin-bottom: 10px;
+}
+
+.halaman-login {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #f2f6fb;
+}
+
+.kartu-login {
+    width: 100%;
+    max-width: 380px;
+    background-color: #ffffff;
+    border: 1px solid var(--garis-tabel);
+    border-radius: 4px;
+    padding: 28px 26px;
+}
