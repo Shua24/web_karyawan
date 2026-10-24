@@ -14,7 +14,12 @@ public static class SeedingAwal
         var penyediaLayanan = lingkup.ServiceProvider;
 
         var konteksData = penyediaLayanan.GetRequiredService<AplikasiDbContext>();
-        await konteksData.Database.EnsureCreatedAsync();
+
+        // Migrate() membuat database kalau belum ada, dan menerapkan migrasi yang
+        // belum jalan kalau sudah ada. Jangan diganti kembali ke EnsureCreated():
+        // EnsureCreated() tidak mencatat apa pun di __EFMigrationsHistory, sehingga
+        // database yang dibuatnya tidak bisa dimigrasikan lagi.
+        await konteksData.Database.MigrateAsync();
 
         await SeedNegaraAsync(konteksData, aplikasi.Environment.ContentRootPath);
         await SeedAkunAsync(penyediaLayanan, aplikasi.Configuration);

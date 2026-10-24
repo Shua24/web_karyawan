@@ -9,7 +9,7 @@ Bootstrap, back-end C# (ASP.NET). **Tidak memakai Blazor dan tidak memakai Razor
 adalah berkas statis yang memanggil API lewat jQuery.
 
 **Status:** semua klaim di dokumen ini diverifikasi langsung di mesin ini. Build bersih
-(0 warning, 0 error), 11 test integrasi lulus, dan alur CRUD diuji lewat HTTP serta browser.
+(0 warning, 0 error), 13 test lulus, dan alur CRUD diuji lewat HTTP serta browser.
 
 ---
 
@@ -24,6 +24,7 @@ adalah berkas statis yang memanggil API lewat jQuery.
 - [Model Data](#model-data)
 - [Aturan Validasi](#aturan-validasi)
 - [Menjalankan Test](#menjalankan-test)
+- [Migrasi Database](#migrasi-database)
 - [Jebakan yang Wajib Diketahui](#jebakan-yang-wajib-diketahui)
 - [Cara Memperluas](#cara-memperluas)
 - [Yang Belum Ada](#yang-belum-ada)
@@ -166,8 +167,10 @@ web_karyawan/
 │
 └── WebKaryawan.Tests/
     ├── PabrikAplikasiUji.cs          WebApplicationFactory + SQLite in-memory
+    ├── PabrikAplikasiBerkasUji.cs    Varian berkas SQLite, untuk menguji migrasi
     ├── KredensialUji.cs              Kredensial khusus test
-    └── IntegrasiKaryawanTests.cs     11 test integrasi
+    ├── IntegrasiKaryawanTests.cs     11 test integrasi CRUD & otorisasi
+    └── MigrasiDatabaseTests.cs       2 test migrasi dari database kosong
 ```
 
 **Yang dihasilkan, jangan diedit manual:** `bin/`, `obj/`, dan `webkaryawan.db`.
@@ -306,10 +309,9 @@ Tabel `Negara` di-seed 249 entri dari daftar ISO 3166 lengkap berbahasa Indonesi
 hanya negara berdaulat. Foreign key memakai `DeleteBehavior.Restrict`, jadi negara yang masih
 dipakai tidak bisa dihapus.
 
-**Skema dibuat dengan `EnsureCreated()`, bukan migrasi.** Artinya perubahan model **tidak**
-otomatis diterapkan ke database yang sudah ada. Kalau kamu mengubah entitas, hapus
-`webkaryawan.db` lalu jalankan ulang. Untuk evolusi skema jangka panjang, ganti ke
-`dotnet ef migrations`.
+**Skema dikelola dengan migrasi EF Core**, dijalankan otomatis saat aplikasi start. Berkas
+migrasi ada di `WebKaryawan.Core/Migrations/`. Kalau kamu mengubah entitas, buat migrasi baru
+(lihat [Migrasi Database](#migrasi-database)) — jangan hapus database sebagai cara biasa.
 
 ---
 
@@ -348,7 +350,7 @@ dotnet test
 Hasil terverifikasi:
 
 ```
-Passed!  - Failed:     0, Passed:    11, Skipped:     0, Total:    11, Duration: 2 s
+Passed!  - Failed:     0, Passed:    13, Skipped:     0, Total:    13, Duration: 2 s
 ```
 
 Test ini **integrasi**, bukan unit: setiap test menembak endpoint HTTP sungguhan lewat
@@ -368,10 +370,118 @@ dilihat klien, termasuk status 401/403 dan bentuk JSON galat.
 | `DaftarAkunBaru_MasukRoleUserBukanAdmin` | registrasi tidak memberi Admin |
 | `Keluar_SetelahKeluarDitolak401` | sesi benar-benar berakhir |
 | `TanggalLahirMasaDepan_Ditolak` | tanggal wajar |
+| `Migrasi_MembangunSkemaDariKosongDanAplikasiBerfungsi` | migrasi membangun 12 tabel + `__EFMigrationsHistory` |
+| `AplikasiBerjalanDiAtasDatabaseHasilMigrasi` | app jalan di DB hasil migrasi (5 seed, 249 negara) |
+
+Dua test terakhir sengaja **tidak** memakai SQLite in-memory, karena pabrik in-memory
+menyuntikkan koneksinya sendiri sehingga `Database.MigrateAsync()` tidak pernah dijalankan.
+Keduanya memakai berkas SQLite sungguhan di direktori sementara.
 
 Test **tidak** butuh `appsettings.Development.json` — kredensialnya disuntikkan sendiri lewat
 `KredensialUji.cs`. Ini disengaja: kalau test mewarisi konfigurasi lokal, suite jadi bergantung
 pada rahasia mesin pengembang dan kata sandi asli ikut tertulis di berkas yang masuk repositori.
+
+---
+
+## Migrasi Database
+
+Skema dikelola dengan **EF Core Migrations**. Migrasi berjalan **otomatis saat aplikasi
+start** (`SeedingAwal` memanggil `Database.MigrateAsync()`), jadi developer baru cukup
+`dotnet run` — tidak ada langkah tambahan.
+
+Berkas migrasi ada di `WebKaryawan.Core/Migrations/` dan **ikut masuk repositori**:
+
+```
+20261024092504_InitialCreate.cs            migrasi pertama (Up/Down)
+20261024092504_InitialCreate.Designer.cs   metadata
+AplikasiDbContextModelSnapshot.cs          snapshot model saat ini
+```
+
+### Alat `dotnet ef` sudah dipatok di repo
+
+Tidak perlu instalasi global. Alatnya dideklarasikan di `.config/dotnet-tools.json`
+(versi 10.0.12), jadi cukup sekali di awal:
+
+```bash
+dotnet tool restore
+dotnet ef --version
+```
+
+Kalau muncul `Could not execute because the specified command or file was not found`,
+`dotnet tool restore` belum dijalankan di direktori repo.
+
+### Perintah yang sering dipakai
+
+Semua perintah butuh `--project` dan `--startup-project`, karena DbContext ada di `Core`
+sementara konfigurasi dan connection string ada di `Api`:
+
+```bash
+# Lihat daftar migrasi dan mana yang sudah diterapkan
+dotnet ef migrations list --project WebKaryawan.Core --startup-project WebKaryawan.Api
+
+# Terapkan migrasi secara manual (tanpa menjalankan aplikasi)
+dotnet ef database update --project WebKaryawan.Core --startup-project WebKaryawan.Api
+
+# Cek apakah model berubah tapi belum dibuatkan migrasi
+dotnet ef migrations has-pending-model-changes --project WebKaryawan.Core --startup-project WebKaryawan.Api
+
+# Buat migrasi baru setelah mengubah entitas
+dotnet ef migrations add NamaPerubahan --project WebKaryawan.Core --startup-project WebKaryawan.Api
+
+# Batalkan migrasi terakhir (hanya kalau BELUM diterapkan ke database)
+dotnet ef migrations remove --project WebKaryawan.Core --startup-project WebKaryawan.Api
+```
+
+`migrations has-pending-model-changes` adalah pemeriksaan termurah sebelum commit: kalau
+jawabannya `No changes have been made to the model since the last migration`, berarti skema
+dan kode masih sinkron.
+
+### Alur mengubah skema
+
+1. Ubah entitas di `WebKaryawan.Core/Entitas/`.
+2. `dotnet ef migrations add NamaPerubahan ...` (perintah di atas).
+3. **Baca berkas migrasi yang dihasilkan.** Pastikan `Up()` berisi perubahan yang kamu maksud —
+   migrasi yang salah tapi "berhasil jalan" lebih berbahaya daripada yang gagal.
+4. Jalankan `dotnet test`. Ada test yang benar-benar menjalankan migrasi ke database kosong.
+5. Jalankan aplikasi; migrasi diterapkan otomatis.
+6. Commit berkas migrasi bersama perubahan entitas. Jangan pernah commit perubahan entitas
+   tanpa migrasinya.
+
+### Kenapa `EnsureCreated()` diganti `Migrate()`
+
+`EnsureCreated()` membuat skema langsung tanpa mencatat apa pun di `__EFMigrationsHistory`.
+Database yang dibuatnya **tidak bisa dimigrasikan lagi** — menjalankan
+`dotnet ef database update` di atasnya gagal dengan:
+
+```
+SQLite Error 1: 'table "AspNetRoles" already exists'.
+```
+
+Sudah diuji dan terbukti. Karena itu `SeedingAwal` sekarang memakai `MigrateAsync()`.
+**Jangan dikembalikan ke `EnsureCreated()`.** Kalau kamu menemukan database lama yang dibuat
+cara itu, hapus saja — isinya hanya data seed:
+
+```bash
+rm -f WebKaryawan.Api/webkaryawan.db WebKaryawan.Api/webkaryawan.db-shm WebKaryawan.Api/webkaryawan.db-wal
+```
+
+### Pindah ke database lain (PostgreSQL, SQL Server)
+
+Struktur proyek sudah siap untuk ini: semua provider didaftarkan di satu tempat
+(`Program.cs`), dan migrasi tinggal di `Core`. Yang perlu dilakukan:
+
+1. Tambah paket provider, misal `Npgsql.EntityFrameworkCore.PostgreSQL`.
+2. Ganti `UseSqlite(...)` menjadi `UseNpgsql(...)` di `Program.cs` dan
+   `PabrikAplikasiBerkasUji.cs`.
+3. Ubah `ConnectionStrings:Bawaan` di `appsettings.Development.json`.
+4. **Buat ulang migrasi** — SQL yang dihasilkan bergantung provider, jadi migrasi SQLite tidak
+   bisa dipakai di PostgreSQL. Hapus folder `Migrations/`, lalu `dotnet ef migrations add InitialCreate`.
+5. Perhatikan dua hal yang bersifat khas SQLite: `EF.Functions.Collate(x, "NOCASE")` di
+   `EndpointNegara` tidak ada di PostgreSQL (pakai `ILIKE` atau collation ICU), dan tipe kolom
+   `"TEXT"` sebaiknya diganti tipe asli provider.
+
+Migrasi untuk SQLite **tidak** otomatis berlaku untuk provider lain. Itu batasan EF Core, bukan
+kekurangan proyek ini.
 
 ---
 
@@ -462,7 +572,8 @@ kill "$PID"
 6. Tambah input di `tambah.html` dan `ubah.html`, tambah kolom di `index.html` (termasuk
    `colspan` pada baris kosong — sekarang `9`).
 7. Tambah ke `Select` di `EndpointKaryawan.cs` (daftar dan detail).
-8. Hapus `webkaryawan.db`, jalankan ulang, dan tambah test.
+8. Buat migrasi: `dotnet ef migrations add TambahKolomBaru --project WebKaryawan.Core --startup-project WebKaryawan.Api`.
+9. Jalankan `dotnet test`, lalu jalankan aplikasi (migrasi diterapkan otomatis), dan tambah test.
 
 ### Mengubah tampilan
 
@@ -484,9 +595,12 @@ Ubah di situ, seluruh halaman ikut. Tidak perlu rebuild.
 - **Nama ditulis penuh, tanpa singkatan** — `KaryawanMasukan`, bukan `KaryawanDto`;
   `nomorHalaman`, bukan `hal`.
 - Setiap nilai balik method ditampung ke variabel lokal bernama sebelum dipakai.
-- Berkas maksimal **300 baris**. Batas ini berlaku untuk berkas C#; yang terbesar sekarang 294
-  baris (`IntegrasiKaryawanTests.cs`). Berkas JavaScript/HTML/CSS sedikit melewati batas
+- Berkas maksimal **300 baris**, berlaku untuk kode yang ditulis tangan. Yang terbesar sekarang
+  294 baris (`IntegrasiKaryawanTests.cs`). Berkas JavaScript/HTML/CSS sedikit melewati batas
   (`js/aplikasi.js` 332 baris) karena memuat tampilan, bukan logika domain.
+  **Pengecualian: `WebKaryawan.Core/Migrations/`** — berkas di situ dihasilkan `dotnet ef`
+  (`.Designer.cs` 324 baris, `AplikasiDbContextModelSnapshot.cs` 321 baris) dan tidak boleh
+  diedit atau dipotong manual.
   `Program.cs` sengaja hanya berisi wiring; endpoint tinggal di `Endpoint/`.
 - Komentar dan pesan dalam Bahasa Indonesia.
 
@@ -496,8 +610,9 @@ Ubah di situ, seluruh halaman ikut. Tidak perlu rebuild.
 
 Diketahui dan disengaja, bukan kelupaan:
 
-- **Belum ada migrasi.** Skema memakai `EnsureCreated()`. Untuk produksi, ganti ke
-  `dotnet ef migrations`.
+- **Migrasi baru hanya untuk SQLite.** Skema dikelola EF Core Migrations dan diterapkan
+  otomatis saat start. Kalau nanti pindah provider, migrasi harus dibuat ulang — lihat
+  [Migrasi Database](#migrasi-database).
 - **Cookie belum `Secure`.** Berjalan di HTTP, aman untuk localhost, **tidak** untuk jaringan.
   Untuk deploy, aktifkan HTTPS dan set `Cookie.SecurePolicy`.
 - **Kata sandi admin berupa plaintext** di `appsettings.Development.json`. Dapat diterima untuk
