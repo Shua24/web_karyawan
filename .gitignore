@@ -1,8 +1,29 @@
-bin/
-obj/
-*.user
+# ============================================================
+# ATURAN MUTLAK: semua instansi bin/ dan obj/ harus diabaikan.
+# Hasil copy build (termasuk appsettings.Development.json yang
+# ikut ter-copy ke bin/) dianggap rahasia dan TIDAK boleh masuk git.
+# ============================================================
+
+# Direktori build pada kedalaman berapa pun, semua kombinasi huruf besar/kecil.
+# Ditulis [Bb][Ii][Nn] alih-alih bin karena gitignore peka huruf besar/kecil:
+# "Bin/", "BIN/", dan "bIn/" tidak tertangkap oleh pola "bin/".
+[Bb][Ii][Nn]/
+[Oo][Bb][Jj]/
+
+# Jaring pengaman: berkas (bukan direktori) yang kebetulan bernama bin/obj.
+[Bb][Ii][Nn]
+[Oo][Bb][Jj]
+
+# ============================================================
+# Rahasia dan basis data lokal
+# ============================================================
+appsettings.Development.json
 *.db
 *.db-shm
 *.db-wal
-appsettings.Development.json
+
+# ============================================================
+# Sisa alat pengembangan
+# ============================================================
+*.user
 .vs/
