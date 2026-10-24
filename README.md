@@ -293,9 +293,77 @@ curl -s -b /tmp/jar.txt http://localhost:5080/api/karyawan
 | `Alamat` | TEXT | wajib |
 | `NegaraId` | TEXT | wajib, foreign key ke `Negara.Id` |
 
-NIK disimpan sebagai **TEXT, bukan INTEGER**, walaupun spesifikasi menyebut "numeric". Alasannya:
-16 digit melewati batas `int32`, dan NIK bisa diawali nol yang akan hilang kalau disimpan
-sebagai angka. NIK adalah identitas, bukan bilangan yang dihitung.
+### Kenapa NIK disimpan TEXT padahal spesifikasi bilang "Numeric"
+
+Spesifikasi menyebut NIK bertipe **Numeric**. Proyek ini menyimpannya sebagai **TEXT**, dan itu
+keputusan sadar, bukan kelalaian.
+
+Akar masalahnya: kata "numeric" di spesifikasi itu mendeskripsikan **isi** — deretan angka —
+bukan **tipe data**. NIK tidak pernah dijumlahkan, dirata-rata, atau diurutkan secara aritmetika.
+Tidak ada operasi matematika yang sah atasnya, jadi memperlakukannya sebagai bilangan tidak
+memberi keuntungan apa pun dan justru merusak nilainya. Yang dibutuhkan adalah kolom yang
+menjamin isinya 16 digit angka, dan itu urusan validasi, bukan tipe kolom.
+
+Dua kerusakan konkret kalau dipaksa INTEGER, keduanya sudah diuji:
+
+**1. NIK berawalan nol hilang kalau disimpan sebagai angka.**
+
+```
+0123456789012345  ->  tersimpan jadi 123456789012345  (15 digit)
+```
+
+NIK adalah identitas, bukan bilangan yang dihitung. Kalau nol di depan hilang, NIK tersimpan
+berbeda dari yang diketik, dan dua NIK yang berbeda (`0123456789012345` dan `123456789012345`)
+bisa bertabrakan sebagai primary key. Dengan TEXT, terbukti tersimpan utuh — sudah diuji
+end-to-end lewat API dan database.
+
+**2. Angka 16 digit kehilangan presisi di JavaScript.**
+
+`Number.MAX_SAFE_INTEGER` adalah `9007199254740991` (16 digit, tapi batasnya di tengah).
+NIK di atas angka itu berubah nilainya begitu melewati `JSON.parse` di browser:
+
+```
+9999999999999999  ->  JSON.parse  ->  10000000000000000   (bertambah satu digit)
+```
+
+Artinya kalau API mengirim NIK sebagai angka JSON, browser bisa menampilkan dan mengirim balik
+NIK yang **berbeda dari yang tersimpan**. Untuk kolom identitas, itu kerusakan data yang tidak
+bisa dideteksi pengguna.
+
+**Jadi yang dipenuhi adalah perilakunya, bukan tipe kolomnya.** NIK dijamin numerik di level
+validasi, dan itu yang penting bagi pengguna:
+
+| Uji | Hasil |
+|---|---|
+| ada huruf (`31710101019900AB`) | ditolak `NIK_TIDAK_VALID` |
+| tanda minus (`-171010101990009`) | ditolak |
+| 17 digit (`31710101019900091`) | ditolak |
+| spasi di tengah (`3171 010101990009`) | ditolak |
+| 15 digit (`537005696745001`) | ditolak |
+| 16 digit angka murni | diterima |
+
+**Untuk klien API:** kirim NIK sebagai **string**, bukan angka:
+
+```json
+{ "nik": "3171010101870001" }
+```
+
+Bukan:
+
+```json
+{ "nik": 3171010101870001 }
+```
+
+Bentuk angka akan ditolak oleh server dengan `400`, karena field `Nik` bertipe `string` dan
+tidak ada konverter yang menerima angka. Kalau kamu perlu menerima kedua bentuk (misalnya
+karena ada klien lain yang mengikuti spesifikasi secara harfiah), tambahkan `JsonConverter`
+pada `KaryawanMasukan.Nik` yang membaca `JsonTokenType.Number` sebagai `long` lalu
+mengubahnya ke string.
+
+Kalau di kemudian hari tipe ini benar-benar harus jadi INTEGER (misal karena tuntutan
+integrasi eksternal), konsekuensinya harus diterima lebih dulu: NIK berawalan nol tidak bisa
+dipakai, dan NIK di atas `9007199254740991` tidak aman ditampilkan di web tanpa penanganan
+khusus.
 
 **Negara**
 
